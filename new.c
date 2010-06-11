@@ -13,11 +13,23 @@ int main()
   }
   
   printf("-- Opened device\n");
-  printf("-- Test %d\n", usb_detach_kernel_driver_np(launcher, 0));
-  printf("-- Test %d\n", usb_claim_interface(launcher, 0));
-  printf("-- Test %d\n", usb_release_interface(launcher, 0));
+  printf("-- Detaching driver from device\n", usb_detach_kernel_driver_np(launcher, 0));
+  printf("-- Claiming device\n");
+  if (usb_claim_interface(launcher, 0) != 0) {
+    printf("!! Unable to claim rocket launcher device!\nExiting...\n");
+    return(1);
+  }
 
+
+
+  printf("-- Releasing device\n", usb_release_interface(launcher, 0));
   return(0);
+}
+
+void test(usb_dev_handle *launcher)
+{
+  char msg[8];
+  for (int 
 }
 
 struct usb_dev_handle* get_rocker_launcher_dev_handle()
