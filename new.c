@@ -1,7 +1,10 @@
 #include <usb.h>
 #include <stdio.h>
+#include <unistd.h>
+
 
 struct usb_dev_handle*  get_rocker_launcher_dev_handle();
+void test(usb_dev_handle *launcher, int sig);
 
 int main() 
 {
@@ -19,17 +22,35 @@ int main()
     printf("!! Unable to claim rocket launcher device!\nExiting...\n");
     return(1);
   }
-
-
+  
+  /* test(launcher, 16); */
+  /* usleep(500000); */
+  /* test(launcher, 1); */
+  
+  
+  for (int i = 0; i < 255; i++) {
+    test(launcher, i);
+    usleep(500000);
+    test(launcher, 1);
+  } 
 
   printf("-- Releasing device\n", usb_release_interface(launcher, 0));
   return(0);
 }
 
-void test(usb_dev_handle *launcher)
+void test(usb_dev_handle *launcher, int sig)
 {
   char msg[8];
-  for (int 
+  for (int i = 0; i < 8; i++) {
+    msg[i] = 0x0;
+  }
+
+  usb_control_msg(launcher, 0x21, 0x9, 0x200, 1, msg, 8, 1000);
+  msg[0] = sig;
+  
+  printf("-- sending sig %d\n", sig);
+  usb_control_msg(launcher, 0x21, 0x9, 0x200, 0, msg, 8, 1000);
+  usb_control_msg(launcher, 0x21, 0x9, 0x200, 1, msg, 8, 1000);  
 }
 
 struct usb_dev_handle* get_rocker_launcher_dev_handle()
