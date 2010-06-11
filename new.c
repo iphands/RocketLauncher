@@ -16,7 +16,8 @@ int main()
   }
   
   printf("-- Opened device\n");
-  printf("-- Detaching driver from device\n", usb_detach_kernel_driver_np(launcher, 0));
+  printf("-- Detaching driver from device\n");
+  usb_detach_kernel_driver_np(launcher, 0);
   printf("-- Claiming device\n");
   if (usb_claim_interface(launcher, 0) != 0) {
     printf("!! Unable to claim rocket launcher device!\nExiting...\n");
@@ -25,16 +26,34 @@ int main()
   
   /* test(launcher, 16); */
   /* usleep(500000); */
-  /* test(launcher, 1); */
+  /* test(launcher, 1);
   
-  
-  for (int i = 0; i < 255; i++) {
-    test(launcher, i);
-    usleep(500000);
-    test(launcher, 1);
-  } 
+  test(launcher, 4);
+  usleep(100000);
+  test(launcher, 4);
 
-  printf("-- Releasing device\n", usb_release_interface(launcher, 0));
+  test(launcher, 4);
+  usleep(100000);
+  test(launcher, 4);
+ */
+
+  char * key;
+  key = malloc(sizeof(char) * 2);
+  while (1) {
+    key = fgets(key, 2, stdin);
+    printf("got key %s\n", key);
+  }
+
+  /*
+    for (int i = 0; i < 10; i++) {
+    test(launcher, i);
+    usleep(100000);
+    test(launcher, 1);
+    } 
+  */
+
+  printf("-- Releasing device\n");
+  usb_release_interface(launcher, 0);
   return(0);
 }
 
