@@ -37,11 +37,11 @@ int main()
     switch (key) {
     case KEY_UP:
       printw("up\n");
-      move_rl(launcher, 1);
+      move_rl(launcher, 2);
       break;
     case KEY_DOWN:
       printw("down\n");
-      move_rl(launcher, 2);
+      move_rl(launcher, 1);
       break;
     case KEY_LEFT:
       printw("left\n");
