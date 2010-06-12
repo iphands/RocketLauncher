@@ -3,9 +3,11 @@
 #include <unistd.h>
 #include <ncurses.h>
 
-struct usb_dev_handle*  get_rocker_launcher_dev_handle();
-void test(usb_dev_handle *launcher, int sig);
+void disarm_rl(usb_dev_handle *launcher);
+void stop_rl(usb_dev_handle *launcher);
 void move_rl(usb_dev_handle *launcher, int sig);
+void send_sig(usb_dev_handle *launcher, int sig);
+struct usb_dev_handle* get_rocker_launcher_dev_handle();
 
 int main() 
 {
@@ -53,13 +55,13 @@ int main()
       break;
     case 32:
       printw("FIRE\n");
-      test(launcher, 16);
+      send_sig(launcher, 16);
       break;
     case 27:
+      disarm_rl(launcher);
       stop_rl(launcher);
       break;
     }
-    //printw("%d\n", key);
   }
 
   endwin();
@@ -69,19 +71,24 @@ int main()
   return(0);
 }
 
+void disarm_rl(usb_dev_handle *launcher)
+{
+   send_sig(launcher, 1);
+}
+
 void stop_rl(usb_dev_handle *launcher)
 {
-  test(launcher, 32);
+  send_sig(launcher, 32);
 }
 
 void move_rl(usb_dev_handle *launcher, int sig)
 {
-  test(launcher, sig);
+  send_sig(launcher, sig);
   usleep(30000);
   stop_rl(launcher);
 }
 
-void test(usb_dev_handle *launcher, int sig)
+void send_sig(usb_dev_handle *launcher, int sig)
 {
   char msg[8];
   for (int i = 0; i < 8; i++) {
