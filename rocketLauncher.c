@@ -25,7 +25,7 @@ int main(int argc, char ** argv)
   if (argc > 1) {
     if(do_arg_check(argc, argv)) {
       printf("Usage: %s [COMMAND TIMEOUT]\n\nCommands are:\n\tup\n\tdown\n\tleft\n\tright\n\tfire\n\tstop\n\n", argv[0]);
-      printf("Timeout is a number of miliseconds from 0 - 10000\n\n");
+      printf("Timeout is a number of millisecond from 0 - 10000\n\n");
       printf("Or use no args for an interactive version. In the interactive version the controls are:");
       printf("\n\tup arrow\n\tdown arrow\n\tleft arrow\n\tright arrow\n\tspace bar (to fire)\n\tescape (to stop)\n\tctrl+c (to quit)\n\n");
       return(1);
@@ -135,37 +135,89 @@ void do_tui(usb_dev_handle *launcher)
   keypad(stdscr, TRUE);
   noecho();
 
-  int key;
+  refresh();
+  WINDOW *log_win = newwin(LINES, 7, 0, 0);
+  box(log_win, '|', '-');
+  mvwprintw(log_win, 0, 1, "log");
+  wrefresh(log_win);
+
+  WINDOW *info_win = newwin(LINES, COLS - 8, 0, 8);
+  box(info_win, '|', '-');
+  mvwprintw(info_win, 0, 1, "info");
+  mvwprintw(info_win, 1, 1, "Controls:");
+  mvwprintw(info_win, 2, 1, "\tup arrow");
+  mvwprintw(info_win, 3, 1, "\tdown arrow");
+  mvwprintw(info_win, 4, 1, "\tleft arrow");
+  mvwprintw(info_win, 5, 1, "\tright arrow");
+  mvwprintw(info_win, 6, 1, "\tspace bar (fire)");
+  mvwprintw(info_win, 7, 1, "\tescape (stop)");
+  mvwprintw(info_win, 8, 1, "\tctrl+c (quit)");
+  mvwprintw(info_win, 10, 1, "Written by Ian Page Hands");
+  mvwprintw(info_win, 12, 1, "Thanks to Dan Krasinski for figuring");
+  mvwprintw(info_win, 13, 1, "out the usb command codes, and writing");
+  mvwprintw(info_win, 14, 1, "some example code.");
+  wrefresh(info_win);
+
+  curs_set(0);
+
+  int key, line_pos = 1;
+  char *mesg = "-----";
   while (key != 3) {
     key = getch();
 
+    for (int i = 2; i < 8; i++) {
+      mvwprintw(info_win, i, 1, " ");
+    }
+
     switch (key) {
     case KEY_UP:
-      printw("up\n");
+      mesg = "up";
+      mvwprintw(info_win, 2, 1, "*");
       move_rl(launcher, UP);
       break;
     case KEY_DOWN:
-      printw("down\n");
+      mesg = "down";
+      mvwprintw(info_win, 3, 1, "*");
       move_rl(launcher, DOWN);
       break;
     case KEY_LEFT:
-      printw("left\n");
+      mesg = "left";
+      mvwprintw(info_win, 4, 1, "*");
+      //wprintw(log_win, "left\n");
       move_rl(launcher, LEFT);
       break;
     case KEY_RIGHT:
-      printw("right\n");
+      mesg = "right";
+      mvwprintw(info_win, 5, 1, "*");
+      //wprintw(log_win, "right\n");
       move_rl(launcher, RIGHT);
       break;
     case 32:
-      printw("FIRE\n");
+      mesg = "FIRE";
+      mvwprintw(info_win, 6, 1, "*");
+      //wprintw(log_win, "FIRE\n");
       send_sig(launcher, FIRE);
       break;
     case 27:
-      printw("stop\n");
+      //wprintw(log_win, "stop\n");
+      mesg = "stop";
+      mvwprintw(info_win, 7, 1, "*");
       disarm_rl(launcher);
       stop_rl(launcher);
       break;
     }
+
+    if (line_pos >= LINES - 1) {
+      line_pos = 1;
+      wclear(log_win);
+      box(log_win, '|', '-');
+      mvwprintw(log_win, 0, 1, "log");
+    }
+
+    mvwprintw(log_win, line_pos++, 1, mesg);
+    curs_set(0);
+    wrefresh(log_win);
+    wrefresh(info_win);
   }
 
   endwin();
