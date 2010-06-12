@@ -3,13 +3,14 @@
 #include <unistd.h>
 #include <ncurses.h>
 
+void do_ui(usb_dev_handle *launcher);
 void disarm_rl(usb_dev_handle *launcher);
 void stop_rl(usb_dev_handle *launcher);
 void move_rl(usb_dev_handle *launcher, int sig);
 void send_sig(usb_dev_handle *launcher, int sig);
 struct usb_dev_handle* get_rocker_launcher_dev_handle();
 
-int main() 
+int main()
 {
   struct usb_dev_handle *launcher = get_rocker_launcher_dev_handle();
   
@@ -27,6 +28,18 @@ int main()
     return(1);
   }
   
+  do_ui(launcher);
+  
+  disarm_rl(launcher);
+  stop_rl(launcher);
+
+  printf("-- Releasing device\n");
+  usb_release_interface(launcher, 0);
+  return(0);
+}
+
+void do_ui(usb_dev_handle *launcher)
+{
   initscr();
   raw();
   keypad(stdscr, TRUE);
@@ -65,20 +78,18 @@ int main()
   }
 
   endwin();
-  
-  printf("-- Releasing device\n");
-  usb_release_interface(launcher, 0);
-  return(0);
 }
 
 void disarm_rl(usb_dev_handle *launcher)
 {
    send_sig(launcher, 1);
+   return;
 }
 
 void stop_rl(usb_dev_handle *launcher)
 {
   send_sig(launcher, 32);
+  return;
 }
 
 void move_rl(usb_dev_handle *launcher, int sig)
@@ -86,6 +97,7 @@ void move_rl(usb_dev_handle *launcher, int sig)
   send_sig(launcher, sig);
   usleep(30000);
   stop_rl(launcher);
+  return;
 }
 
 void send_sig(usb_dev_handle *launcher, int sig)
@@ -100,7 +112,9 @@ void send_sig(usb_dev_handle *launcher, int sig)
   
   //printf("-- sending sig %d\n", sig);
   usb_control_msg(launcher, 0x21, 0x9, 0x200, 0, msg, 8, 1000);
-  usb_control_msg(launcher, 0x21, 0x9, 0x200, 1, msg, 8, 1000);  
+  usb_control_msg(launcher, 0x21, 0x9, 0x200, 1, msg, 8, 1000);
+
+  return;
 }
 
 struct usb_dev_handle* get_rocker_launcher_dev_handle()
