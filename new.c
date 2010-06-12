@@ -1,10 +1,11 @@
 #include <usb.h>
 #include <stdio.h>
 #include <unistd.h>
-
+#include <ncurses.h>
 
 struct usb_dev_handle*  get_rocker_launcher_dev_handle();
 void test(usb_dev_handle *launcher, int sig);
+void move_rl(usb_dev_handle *launcher, int sig);
 
 int main() 
 {
@@ -24,37 +25,61 @@ int main()
     return(1);
   }
   
-  /* test(launcher, 16); */
-  /* usleep(500000); */
-  /* test(launcher, 1);
-  
-  test(launcher, 4);
-  usleep(100000);
-  test(launcher, 4);
+  initscr();
+  raw();
+  keypad(stdscr, TRUE);
+  noecho();
 
-  test(launcher, 4);
-  usleep(100000);
-  test(launcher, 4);
- */
+  int key;
+  while (key != 3) {
+    key = getch();
 
-  char * key;
-  key = malloc(sizeof(char) * 2);
-  while (1) {
-    key = fgets(key, 2, stdin);
-    printf("got key %s\n", key);
+    switch (key) {
+    case KEY_UP:
+      printw("up\n");
+      move_rl(launcher, 1);
+      break;
+    case KEY_DOWN:
+      printw("down\n");
+      move_rl(launcher, 2);
+      break;
+    case KEY_LEFT:
+      printw("left\n");
+      move_rl(launcher, 4);
+      break;
+    case KEY_RIGHT:
+      printw("right\n");
+      move_rl(launcher, 8);
+      break;
+    case 32:
+      printw("FIRE\n");
+      test(launcher, 16);
+      break;
+    case 27:
+      stop_rl(launcher);
+      break;
+    }
+    //printw("%d\n", key);
   }
 
-  /*
-    for (int i = 0; i < 10; i++) {
-    test(launcher, i);
-    usleep(100000);
-    test(launcher, 1);
-    } 
-  */
-
+  endwin();
+  
   printf("-- Releasing device\n");
   usb_release_interface(launcher, 0);
   return(0);
+}
+
+void stop_rl(usb_dev_handle *launcher)
+{
+  test(launcher, 1);
+  test(launcher, 2);
+}
+
+void move_rl(usb_dev_handle *launcher, int sig)
+{
+  test(launcher, sig);
+  usleep(30000);
+  test(launcher, 1);
 }
 
 void test(usb_dev_handle *launcher, int sig)
@@ -67,7 +92,7 @@ void test(usb_dev_handle *launcher, int sig)
   usb_control_msg(launcher, 0x21, 0x9, 0x200, 1, msg, 8, 1000);
   msg[0] = sig;
   
-  printf("-- sending sig %d\n", sig);
+  //printf("-- sending sig %d\n", sig);
   usb_control_msg(launcher, 0x21, 0x9, 0x200, 0, msg, 8, 1000);
   usb_control_msg(launcher, 0x21, 0x9, 0x200, 1, msg, 8, 1000);  
 }
@@ -86,7 +111,7 @@ struct usb_dev_handle* get_rocker_launcher_dev_handle()
     for (dev = bus->devices; dev; dev = dev->next) {
 
       if ((dev->descriptor.idVendor == 2689) || (dev->descriptor.idVendor == 6465)) {
-	printf("-- Found device with vid %d\n", dev->descriptor.idVendor);
+	printf("-- Found device with vendor id %d\n", dev->descriptor.idVendor);
 	return usb_open(dev);
       }
     }
