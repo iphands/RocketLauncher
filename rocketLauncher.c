@@ -142,7 +142,7 @@ void do_tui(usb_dev_handle *launcher)
   mvwprintw(log_win, 0, 1, "log");
   wrefresh(log_win);
 
-  WINDOW *info_win = newwin(15, COLS, 0, 8);
+  WINDOW *info_win = newwin(15, COLS - 8, 0, 8);
   box(info_win, '|', '-');
   mvwprintw(info_win, 0, 1, "info");
   mvwprintw(info_win, 1, 1, "Controls:");
