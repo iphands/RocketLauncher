@@ -71,15 +71,14 @@ int main()
 
 void stop_rl(usb_dev_handle *launcher)
 {
-  test(launcher, 1);
-  test(launcher, 2);
+  test(launcher, 32);
 }
 
 void move_rl(usb_dev_handle *launcher, int sig)
 {
   test(launcher, sig);
   usleep(30000);
-  test(launcher, 1);
+  stop_rl(launcher);
 }
 
 void test(usb_dev_handle *launcher, int sig)
