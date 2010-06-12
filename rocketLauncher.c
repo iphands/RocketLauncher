@@ -16,7 +16,7 @@ void do_tui(usb_dev_handle *launcher);
 void disarm_rl(usb_dev_handle *launcher);
 void stop_rl(usb_dev_handle *launcher);
 void move_rl(usb_dev_handle *launcher, int sig);
-void send_sig(usb_dev_handle *launcher, int sig);
+void send_msg(usb_dev_handle *launcher, int sig);
 struct usb_dev_handle* get_rocker_launcher_dev_handle();
 
 int main(int argc, char ** argv)
@@ -68,19 +68,19 @@ void do_cli(usb_dev_handle *launcher, char direction, int timeout)
 {
   switch (direction) {
   case 'u':
-    send_sig(launcher, UP);
+    send_msg(launcher, UP);
     break;
   case 'd':
-    send_sig(launcher, DOWN);
+    send_msg(launcher, DOWN);
     break;
   case 'l':
-    send_sig(launcher, LEFT);
+    send_msg(launcher, LEFT);
     break;
   case 'r':
-    send_sig(launcher, RIGHT);
+    send_msg(launcher, RIGHT);
     break;
   case 'f':
-    send_sig(launcher, FIRE);
+    send_msg(launcher, FIRE);
     break;
   case 's':
     stop_rl(launcher);
@@ -141,7 +141,7 @@ void do_tui(usb_dev_handle *launcher)
   mvwprintw(log_win, 0, 1, "log");
   wrefresh(log_win);
 
-  WINDOW *info_win = newwin(LINES, COLS - 8, 0, 8);
+  WINDOW *info_win = newwin(16, COLS, 0, 8);
   box(info_win, '|', '-');
   mvwprintw(info_win, 0, 1, "info");
   mvwprintw(info_win, 1, 1, "Controls:");
@@ -158,11 +158,22 @@ void do_tui(usb_dev_handle *launcher)
   mvwprintw(info_win, 14, 1, "some example code.");
   wrefresh(info_win);
 
+  WINDOW *debug_win = newwin(LINES - 16, COLS, 16, 8);
+  box(debug_win, '|', '-');
+  mvwprintw(debug_win, 0, 1, "device-debug");
+  char rec_buf[26];
+  for (int i = 1; i < 4; i++) {
+    usb_get_string_simple(launcher, i, rec_buf, 26);
+    mvwprintw(debug_win, i + 1, 1, "%s", rec_buf);
+  }
+  wrefresh(debug_win);
   curs_set(0);
 
   int key, line_pos = 1;
-  char *mesg = "-----";
+  char *mesg = "-----";  
+
   while (key != 3) {
+    
     key = getch();
 
     for (int i = 2; i < 8; i++) {
@@ -183,23 +194,19 @@ void do_tui(usb_dev_handle *launcher)
     case KEY_LEFT:
       mesg = "left";
       mvwprintw(info_win, 4, 1, "*");
-      //wprintw(log_win, "left\n");
       move_rl(launcher, LEFT);
       break;
     case KEY_RIGHT:
       mesg = "right";
       mvwprintw(info_win, 5, 1, "*");
-      //wprintw(log_win, "right\n");
       move_rl(launcher, RIGHT);
       break;
     case 32:
       mesg = "FIRE";
       mvwprintw(info_win, 6, 1, "*");
-      //wprintw(log_win, "FIRE\n");
-      send_sig(launcher, FIRE);
+      send_msg(launcher, FIRE);
       break;
     case 27:
-      //wprintw(log_win, "stop\n");
       mesg = "stop";
       mvwprintw(info_win, 7, 1, "*");
       disarm_rl(launcher);
@@ -226,31 +233,32 @@ void do_tui(usb_dev_handle *launcher)
 
 void disarm_rl(usb_dev_handle *launcher)
 {
-  send_sig(launcher, 1);
+  send_msg(launcher, 1);
+  send_msg(launcher, 2);
   return;
 }
 
 void stop_rl(usb_dev_handle *launcher)
 {
-  send_sig(launcher, 32);
+  send_msg(launcher, 32);
   return;
 }
 
 void move_rl(usb_dev_handle *launcher, int sig)
 {
-  send_sig(launcher, sig);
+  send_msg(launcher, sig);
   usleep(30000);
   stop_rl(launcher);
   return;
 }
 
-void send_sig(usb_dev_handle *launcher, int sig)
+void send_msg(usb_dev_handle *launcher, int sig)
 {
   char msg[8];
   for (int i = 0; i < 8; i++) {
     msg[i] = 0x0;
   }
-
+  //int usb_control_msg(usb_dev_handle *dev, int requesttype, int request, int value, int index, char *bytes, int size, int timeout);
   usb_control_msg(launcher, 0x21, 0x9, 0x200, 1, msg, 8, 1000);
   msg[0] = sig;
   
