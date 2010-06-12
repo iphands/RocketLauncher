@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <ncurses.h>
+#include <string.h>
 
 #define DOWN 1
 #define UP 2
@@ -141,7 +142,7 @@ void do_tui(usb_dev_handle *launcher)
   mvwprintw(log_win, 0, 1, "log");
   wrefresh(log_win);
 
-  WINDOW *info_win = newwin(16, COLS, 0, 8);
+  WINDOW *info_win = newwin(15, COLS, 0, 8);
   box(info_win, '|', '-');
   mvwprintw(info_win, 0, 1, "info");
   mvwprintw(info_win, 1, 1, "Controls:");
@@ -153,27 +154,49 @@ void do_tui(usb_dev_handle *launcher)
   mvwprintw(info_win, 7, 1, "\tescape (stop)");
   mvwprintw(info_win, 8, 1, "\tctrl+c (quit)");
   mvwprintw(info_win, 10, 1, "Written by Ian Page Hands");
-  mvwprintw(info_win, 12, 1, "Thanks to Dan Krasinski for figuring");
-  mvwprintw(info_win, 13, 1, "out the usb command codes, and writing");
-  mvwprintw(info_win, 14, 1, "some example code.");
+  mvwprintw(info_win, 12, 1, "Thanks to Dan Krasinski for figuring out the usb command codes,");
+  mvwprintw(info_win, 13, 1, "and writing some example code.");
   wrefresh(info_win);
 
-  WINDOW *debug_win = newwin(LINES - 16, COLS, 16, 8);
+  WINDOW *debug_win = newwin(LINES - 15, COLS, 15, 8);
   box(debug_win, '|', '-');
   mvwprintw(debug_win, 0, 1, "device-debug");
+  /*
   char rec_buf[26];
   for (int i = 1; i < 4; i++) {
     usb_get_string_simple(launcher, i, rec_buf, 26);
     mvwprintw(debug_win, i + 1, 1, "%s", rec_buf);
   }
   wrefresh(debug_win);
+  */
+
   curs_set(0);
 
   int key, line_pos = 1;
   char *mesg = "-----";  
 
   while (key != 3) {
+    //usb_interrupt_read(usb_dev_handle *dev, int ep, char *bytes, int size, int timeout);
+    //int usb_control_msg(usb_dev_handle *dev, int requesttype, int request, int value, int index, char *bytes, int size, int timeout);
+    /*
+    char send_buf[1];
+    send_buf[0] = 0x0a;
+    int ret = usb_interrupt_write(launcher, 0x81, send_buf, 0x01, 5);
+    mvwprintw(debug_win, 1, 1, "que_ret: %d", ret);
     
+    char rec_buf[8];
+    memset(rec_buf, 0x0, 8);
+    ret = usb_interrupt_read(launcher, 0x81, rec_buf,  8, 5);
+    mvwprintw(debug_win, 2, 1, "ans_ret: %d", ret);
+    
+    for (int i = 0; i < 8; i++) {
+      mvwprintw(debug_win, i + 3, 1, "                ");
+      mvwprintw(debug_win, i + 3, 1, "%d", rec_buf[i]);
+    }         
+
+    wrefresh(debug_win);
+    */
+
     key = getch();
 
     for (int i = 2; i < 8; i++) {
@@ -255,17 +278,10 @@ void move_rl(usb_dev_handle *launcher, int sig)
 void send_msg(usb_dev_handle *launcher, int sig)
 {
   char msg[8];
-  for (int i = 0; i < 8; i++) {
-    msg[i] = 0x0;
-  }
-  //int usb_control_msg(usb_dev_handle *dev, int requesttype, int request, int value, int index, char *bytes, int size, int timeout);
-  usb_control_msg(launcher, 0x21, 0x9, 0x200, 1, msg, 8, 1000);
+  memset(msg, 0, 8);
   msg[0] = sig;
   
-  //printf("-- sending sig %d\n", sig);
-  usb_control_msg(launcher, 0x21, 0x9, 0x200, 0, msg, 8, 1000);
-  usb_control_msg(launcher, 0x21, 0x9, 0x200, 1, msg, 8, 1000);
-
+  usb_control_msg(launcher, 0x21, 0x9, 0x200, 0, msg, 8, 5);
   return;
 }
 
