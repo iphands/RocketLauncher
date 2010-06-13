@@ -22,7 +22,7 @@
       xmlHttp.send(null);
       }
 
-      document.onkeydown = function(e)
+      document.onkeyup = function(e)
       {
       var e = window.event || e
 
@@ -49,23 +49,29 @@
   </head>
   <body>
     <div align="center">
-      <APPLET CODE = "WebCamApplet.class" archive="applet.jar" WIDTH = "640" HEIGHT = "480">
-	<param name=URL value="http://core2.lan:8888">
-	<param name=FPS value="60">
-	<param name=width value="640">
-	<param name=height value="480">
-      </APPLET>
+      <table>
+	<tr>
+	  <td>
+	    <APPLET CODE = "WebCamApplet.class" archive="applet.jar" WIDTH = "640" HEIGHT = "480">
+	      <param name=URL value="http://core2.lan:8888">
+	      <param name=FPS value="60">
+	      <param name=width value="640">
+	      <param name=height value="480">
+	    </APPLET>
+	  </td>
+	  <td>
+	    <h2>Controls</h2>
+	    <ul>
+	      <li>up arrow</li>
+	      <li>down arrow</li>
+	      <li>left arrow</li>
+	      <li>right arrow</li>
+	      <li>space bar (FIRE!)</li>
+	    </ul>
+	  </td>
+	</tr>
+      </table>
     </div>
-
-
-    <h2>Controls</h2>
-      <ul>
-	<li>up arrow</li>
-	<li>down arrow</li>
-	<li>left arrow</li>
-	<li>right arrow</li>
-	<li>space bar (FIRE!)</li>
-      </ul>
 
     <!--
 	<div>
