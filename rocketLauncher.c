@@ -3,6 +3,10 @@
 #include <unistd.h>
 #include <ncurses.h>
 #include <string.h>
+#include <signal.h>
+
+#define FALSE 0
+#define TRUE 1
 
 #define DOWN 1
 #define UP 2
@@ -11,6 +15,7 @@
 #define FIRE 16
 #define STOP 32
 
+char can_move_rl(usb_dev_handle *launcher, char direction);
 void do_cli(usb_dev_handle *launcher, char direction, int timeout);
 char do_arg_check(int argc, char ** argv);
 void do_tui(usb_dev_handle *launcher);
@@ -162,45 +167,60 @@ void do_tui(usb_dev_handle *launcher)
   box(debug_win, '|', '-');
   mvwprintw(debug_win, 0, 1, "device-debug");
   /*
-  char rec_buf[26];
-  for (int i = 1; i < 4; i++) {
+    char rec_buf[26];
+    for (int i = 1; i < 4; i++) {
     usb_get_string_simple(launcher, i, rec_buf, 26);
     mvwprintw(debug_win, i + 1, 1, "%s", rec_buf);
-  }
-  wrefresh(debug_win);
+    }
+    wrefresh(debug_win);
   */
 
   curs_set(0);
 
-  int key, line_pos = 1;
+  int key = 0;
+  int line_pos = 1;
   char *mesg = "-----";  
 
-  while (key != 3) {
-    //usb_interrupt_read(usb_dev_handle *dev, int ep, char *bytes, int size, int timeout);
-    //int usb_control_msg(usb_dev_handle *dev, int requesttype, int request, int value, int index, char *bytes, int size, int timeout);
-    /*
-    char send_buf[1];
-    send_buf[0] = 0x0a;
-    int ret = usb_interrupt_write(launcher, 0x81, send_buf, 0x01, 5);
-    mvwprintw(debug_win, 1, 1, "que_ret: %d", ret);
+  /*
+    pid_t child_pid = fork();
+    if (child_pid == 0) {
+    unsigned char rec_buf[1];
+    unsigned char msg[8];
+    memset(msg, 0x0, 8);
+    msg[0] = 0x40;
+    int ret;
+    unsigned int i = 0;
+    while (1) {
+    mvwprintw(debug_win, 1, 1, "loop %d", i);
     
-    char rec_buf[8];
-    memset(rec_buf, 0x0, 8);
-    ret = usb_interrupt_read(launcher, 0x81, rec_buf,  8, 5);
-    mvwprintw(debug_win, 2, 1, "ans_ret: %d", ret);
+    usb_control_msg(launcher, 0x21, 0x9, 0x200, 0, msg, 8, 100);
+    ret = usb_interrupt_read(launcher, 0x81, rec_buf,  1, 250);
+    if (ret >= 0) {
+    mvwprintw(debug_win, 2, 1, "pass ans_ret(%d): %d == %x", 0x81, ret, *rec_buf);
+    } else {
+    mvwprintw(debug_win, 3, 1, "fail ans_ret(%d): %d", 0x81, ret);
+    }
     
-    for (int i = 0; i < 8; i++) {
-      mvwprintw(debug_win, i + 3, 1, "                ");
-      mvwprintw(debug_win, i + 3, 1, "%d", rec_buf[i]);
-    }         
-
+    i++;
     wrefresh(debug_win);
-    */
+    //wrefresh(log_win);
+    //wrefresh(info_win);
+    //usleep(100 * 1000);
+    }
+    
+    return(0);
+    }
+  */
 
+  while (key != 3) {
     key = getch();
 
     for (int i = 2; i < 8; i++) {
       mvwprintw(info_win, i, 1, " ");
+    }
+
+    if (can_move_rl(launcher, key) == FALSE) {
+      
     }
 
     switch (key) {
@@ -250,8 +270,25 @@ void do_tui(usb_dev_handle *launcher)
     wrefresh(info_win);
   }
 
+  //kill(child_pid, SIGKILL);
   endwin();
   return;
+}
+
+char can_move_rl(usb_dev_handle *launcher, char direction)
+{
+  char rec_buf[1];
+  char msg[8];
+  memset(msg, 0x0, 8);
+  msg[0] = 0x40;
+  
+  usb_control_msg(launcher, 0x21, 0x9, 0x200, 0, msg, 8, 100);
+  int ret = usb_interrupt_read(launcher, 0x81, rec_buf,  1, 250);
+
+  //if () {
+  //}
+
+  return(TRUE);
 }
 
 void disarm_rl(usb_dev_handle *launcher)
@@ -278,10 +315,26 @@ void move_rl(usb_dev_handle *launcher, int sig)
 void send_msg(usb_dev_handle *launcher, int sig)
 {
   char msg[8];
+
+  /*
+  unsigned char rec_buf[1];
+  memset(rec_buf, 0x0, 1);
+  memset(msg, 0x0, 8);
+  msg[0] = 0x40;
+  usb_control_msg(launcher, 0x21, 0x9, 0x200, 0, msg, 8, 5);
+
+  int ret = usb_interrupt_read(launcher, 0x81, rec_buf,  1, 5);
+  if (ret == 1) {
+    if (rec_buf > 0) {
+      return;
+    }
+  }
+  */
+
   memset(msg, 0, 8);
   msg[0] = sig;
-  
   usb_control_msg(launcher, 0x21, 0x9, 0x200, 0, msg, 8, 5);
+
   return;
 }
 
