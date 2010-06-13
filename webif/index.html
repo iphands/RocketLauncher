@@ -3,14 +3,13 @@
     <title>RocketLauncher -- webif</title>
 
     <script type="text/javascript">
-      function getMessageResponse(direction, time)
+      function call_rl(direction, time)
       {
       var xmlHttp = new XMLHttpRequest();
       
       xmlHttp.onreadystatechange = function()
       {
-      if (xmlHttp.readyState == 4)
-      {
+      if (xmlHttp.readyState == 4) {
       document.getElementById('response').innerHTML = xmlHttp.responseText;
       document.myform.message.value = '';
       }
@@ -21,6 +20,29 @@
       url = url +" &time=" + time;
       xmlHttp.open("GET", url, true);
       xmlHttp.send(null);
+      }
+
+      document.onkeydown = function(e)
+      {
+      var e = window.event || e
+
+      switch (e.keyCode ) {
+      case 38:
+      call_rl("up", 500);
+      break;
+      case 40:
+      call_rl("down", 500);
+      break;
+      case 37:
+      call_rl("left", 500);
+      break;
+      case 39:
+      call_rl("right", 500);
+      break;
+      case 32:
+      call_rl("fire", 3500);
+      break;
+      }
       }
     </script>
 
@@ -35,26 +57,38 @@
       </APPLET>
     </div>
 
-    <div>
-      <center>
-	<table border="0">
-	  <tr>
-	    <td></td>
-	    <td><input onclick='getMessageResponse("up", 500);' id="up" type="button" value="up"/></td>
-	    <td></td>
-	  </tr>
-	  <tr>
-	    <td><input onclick='getMessageResponse("left", 500);' id="left" type="button" value="left"/></td>
-	    <td><input onclick='getMessageResponse("fire", 3800);' id="fire" type="button" value="FIRE"/></td>
-	    <td><input onclick='getMessageResponse("right", 500);' id="right" type="button" value="right"/></td>
-	  </tr>
-	  <tr>
-	    <td></td>
-	    <td><input onclick='getMessageResponse("down", 500);' id="down" type="button" value="down"/></td>
-	    <td></td>
-	  </tr>
-	</table>
-      </center>
-    </div>    
+
+    <h2>Controls</h2>
+      <ul>
+	<li>up arrow</li>
+	<li>down arrow</li>
+	<li>left arrow</li>
+	<li>right arrow</li>
+	<li>space bar (FIRE!)</li>
+      </ul>
+
+    <!--
+	<div>
+	  <center>
+	    <table border="0">
+	      <tr>
+		<td></td>
+		<td><input onclick='call_rl("up", 500);' id="up" type="button" value="up"/></td>
+		<td></td>
+	      </tr>
+	      <tr>
+		<td><input onclick='call_rl("left", 500);' id="left" type="button" value="left"/></td>
+		<td><input onclick='call_rl("fire", 3800);' id="fire" type="button" value="FIRE"/></td>
+		<td><input onclick='call_rl("right", 500);' id="right" type="button" value="right"/></td>
+	      </tr>
+	      <tr>
+		<td></td>
+		<td><input onclick='call_rl("down", 500);' id="down" type="button" value="down"/></td>
+		<td></td>
+	      </tr>
+	    </table>
+	  </center>
+	</div>
+	-->
   </body>
 </html>
