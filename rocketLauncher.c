@@ -15,6 +15,7 @@
 #define FIRE 16
 #define STOP 32
 
+int loop_until_ret(usb_dev_handle *launcher, unsigned int timeout, unsigned int sig);
 char can_move_rl(usb_dev_handle *launcher, char direction);
 int get_sig(int key);
 char* get_mesg(char *mesg, int key);
@@ -121,6 +122,17 @@ void do_cli(usb_dev_handle *launcher, char direction, int timeout)
     break;
   case 'f':
     send_msg(launcher, FIRE);
+    int ret = loop_until_ret(launcher, 5000, FIRE);
+    
+    if (ret) {
+      printf("Done firing!");
+    } else {
+      printf("!! Hit firing timeout!");
+    }
+    
+    disarm_rl(launcher);
+    stop_rl(launcher);
+    return;
     break;
   case 's':
     stop_rl(launcher);
@@ -218,14 +230,14 @@ void do_tui(usb_dev_handle *launcher)
       mvwprintw(info_win, i, 1, " ");
     }
 
-    if (can_move_rl(launcher, get_sig(key)) == FALSE) {
-      if (debug_line_pos >= (LINES - 15 - 1)) {
-	debug_line_pos = 1;
-	wclear(debug_win);
-	box(debug_win, '|', '-');
-	mvwprintw(debug_win, 0, 1, "device-debug");
-      }
-
+    if (debug_line_pos >= (LINES - 15 - 1)) {
+      debug_line_pos = 1;
+      wclear(debug_win);
+      box(debug_win, '|', '-');
+      mvwprintw(debug_win, 0, 1, "device-debug");
+    }
+    
+    if (can_move_rl(launcher, get_sig(key)) == FALSE) {      
       mvwprintw(debug_win, debug_line_pos++, 1, "Unable to move %s! Already at the max. (%d)", mesg, get_sig(key));
 
       wrefresh(debug_win);
@@ -253,6 +265,17 @@ void do_tui(usb_dev_handle *launcher)
     case 32:
       mvwprintw(info_win, 6, 1, "*");
       send_msg(launcher, FIRE);
+      int ret = loop_until_ret(launcher, 5000, FIRE);
+            
+      if (ret) {
+	mvwprintw(debug_win, debug_line_pos++, 1, "Done firing!");
+      } else {
+	mvwprintw(debug_win, debug_line_pos++, 1, "!! Hit firing timeout!");
+      }
+      
+      wrefresh(debug_win);
+      disarm_rl(launcher);
+      stop_rl(launcher);
       break;
     case 27:
       mvwprintw(info_win, 7, 1, "*");
@@ -330,6 +353,36 @@ int get_sig(int key)
   return(0);
 }
 
+int loop_until_ret(usb_dev_handle *launcher, unsigned int timeout, unsigned int sig) 
+{
+  char rec_buf[1];
+  char msg[8];
+  memset(rec_buf, 0x0, 1);
+  memset(msg, 0x0, 8);
+  msg[0] = 0x40;
+
+  char ret = FALSE;
+  for (unsigned int i = 0; i < timeout; i += 100) {
+    ret = can_move_rl(launcher, sig);
+    send_msg(launcher, sig);
+    if (ret == FALSE) {
+      break;
+    }
+    usleep(1000 * 100);
+  }
+  
+  for (unsigned int i = 0; i < timeout; i += 100) {
+    ret = can_move_rl(launcher, sig);
+    send_msg(launcher, sig);
+    if (ret == TRUE) {
+      return(TRUE);
+    }
+    usleep(1000 * 100);
+  }
+  
+  return(FALSE);
+}
+
 char can_move_rl(usb_dev_handle *launcher, char direction)
 {
   char rec_buf[1];
@@ -338,7 +391,7 @@ char can_move_rl(usb_dev_handle *launcher, char direction)
   msg[0] = 0x40;
   
   usb_control_msg(launcher, 0x21, 0x9, 0x200, 0, msg, 8, 100);
-  int ret = usb_interrupt_read(launcher, 0x81, rec_buf,  1, 250);
+  usb_interrupt_read(launcher, 0x81, rec_buf,  1, 250);
 
   for (int mask = 32; mask > 0; mask >>= 1) {    
     if ((((int)rec_buf[0]) &  mask) == direction) {
@@ -365,7 +418,7 @@ void stop_rl(usb_dev_handle *launcher)
 void move_rl(usb_dev_handle *launcher, int sig)
 {
   send_msg(launcher, sig);
-  usleep(30000);
+  usleep(32 * 1000);
   stop_rl(launcher);
   return;
 }
