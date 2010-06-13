@@ -125,9 +125,9 @@ void do_cli(usb_dev_handle *launcher, char direction, int timeout)
     int ret = loop_until_ret(launcher, 5000, FIRE);
     
     if (ret) {
-      printf("Done firing!");
+      printf("Done firing!\n");
     } else {
-      printf("!! Hit firing timeout!");
+      printf("!! Hit firing timeout!\n");
     }
     
     disarm_rl(launcher);
