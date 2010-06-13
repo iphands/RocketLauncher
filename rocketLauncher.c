@@ -16,6 +16,8 @@
 #define STOP 32
 
 char can_move_rl(usb_dev_handle *launcher, char direction);
+int get_sig(int key);
+char* get_mesg(char *mesg, int key);
 void do_cli(usb_dev_handle *launcher, char direction, int timeout);
 char do_arg_check(int argc, char ** argv);
 void do_tui(usb_dev_handle *launcher);
@@ -72,6 +74,38 @@ int main(int argc, char ** argv)
 
 void do_cli(usb_dev_handle *launcher, char direction, int timeout)
 {
+  
+  char dir_char = 0;
+
+  switch (direction) {
+  case 'u':
+    dir_char = UP;
+    break;
+  case 'd':
+    dir_char = DOWN;
+    break;
+  case 'l':
+    dir_char = LEFT;
+    break;
+  case 'r':
+    dir_char = RIGHT;
+    break;
+  case 'f':
+    dir_char = FIRE;
+    break;
+  case 's':
+    dir_char = STOP;
+    break;
+  default:
+    return;
+    break;
+  }
+
+  if (can_move_rl(launcher, dir_char) == FALSE) {
+    printf("!! Unable to move %c! Already at the max.\n", direction);
+    return;
+  }
+
   switch (direction) {
   case 'u':
     send_msg(launcher, UP);
@@ -166,113 +200,134 @@ void do_tui(usb_dev_handle *launcher)
   WINDOW *debug_win = newwin(LINES - 15, COLS, 15, 8);
   box(debug_win, '|', '-');
   mvwprintw(debug_win, 0, 1, "device-debug");
-  /*
-    char rec_buf[26];
-    for (int i = 1; i < 4; i++) {
-    usb_get_string_simple(launcher, i, rec_buf, 26);
-    mvwprintw(debug_win, i + 1, 1, "%s", rec_buf);
-    }
-    wrefresh(debug_win);
-  */
+  wrefresh(debug_win);
 
   curs_set(0);
 
   int key = 0;
-  int line_pos = 1;
+  int log_line_pos = 1;
+  int debug_line_pos = 1;
   char *mesg = "-----";  
-
-  /*
-    pid_t child_pid = fork();
-    if (child_pid == 0) {
-    unsigned char rec_buf[1];
-    unsigned char msg[8];
-    memset(msg, 0x0, 8);
-    msg[0] = 0x40;
-    int ret;
-    unsigned int i = 0;
-    while (1) {
-    mvwprintw(debug_win, 1, 1, "loop %d", i);
-    
-    usb_control_msg(launcher, 0x21, 0x9, 0x200, 0, msg, 8, 100);
-    ret = usb_interrupt_read(launcher, 0x81, rec_buf,  1, 250);
-    if (ret >= 0) {
-    mvwprintw(debug_win, 2, 1, "pass ans_ret(%d): %d == %x", 0x81, ret, *rec_buf);
-    } else {
-    mvwprintw(debug_win, 3, 1, "fail ans_ret(%d): %d", 0x81, ret);
-    }
-    
-    i++;
-    wrefresh(debug_win);
-    //wrefresh(log_win);
-    //wrefresh(info_win);
-    //usleep(100 * 1000);
-    }
-    
-    return(0);
-    }
-  */
 
   while (key != 3) {
     key = getch();
+
+    mesg = get_mesg(mesg, key);
 
     for (int i = 2; i < 8; i++) {
       mvwprintw(info_win, i, 1, " ");
     }
 
-    if (can_move_rl(launcher, key) == FALSE) {
-      
+    if (can_move_rl(launcher, get_sig(key)) == FALSE) {
+      if (debug_line_pos >= (LINES - 15 - 1)) {
+	debug_line_pos = 1;
+	wclear(debug_win);
+	box(debug_win, '|', '-');
+	mvwprintw(debug_win, 0, 1, "device-debug");
+      }
+
+      mvwprintw(debug_win, debug_line_pos++, 1, "Unable to move %s! Already at the max. (%d)", mesg, get_sig(key));
+
+      wrefresh(debug_win);
+      curs_set(0);
+      continue;
     }
 
     switch (key) {
     case KEY_UP:
-      mesg = "up";
       mvwprintw(info_win, 2, 1, "*");
       move_rl(launcher, UP);
       break;
     case KEY_DOWN:
-      mesg = "down";
       mvwprintw(info_win, 3, 1, "*");
       move_rl(launcher, DOWN);
       break;
     case KEY_LEFT:
-      mesg = "left";
       mvwprintw(info_win, 4, 1, "*");
       move_rl(launcher, LEFT);
       break;
     case KEY_RIGHT:
-      mesg = "right";
       mvwprintw(info_win, 5, 1, "*");
       move_rl(launcher, RIGHT);
       break;
     case 32:
-      mesg = "FIRE";
       mvwprintw(info_win, 6, 1, "*");
       send_msg(launcher, FIRE);
       break;
     case 27:
-      mesg = "stop";
       mvwprintw(info_win, 7, 1, "*");
       disarm_rl(launcher);
       stop_rl(launcher);
       break;
     }
 
-    if (line_pos >= LINES - 1) {
-      line_pos = 1;
+    if (log_line_pos >= LINES - 1) {
+      log_line_pos = 1;
       wclear(log_win);
       box(log_win, '|', '-');
       mvwprintw(log_win, 0, 1, "log");
     }
 
-    mvwprintw(log_win, line_pos++, 1, mesg);
+    mvwprintw(log_win, log_line_pos++, 1, mesg);
     curs_set(0);
     wrefresh(log_win);
     wrefresh(info_win);
   }
 
-  //kill(child_pid, SIGKILL);
   endwin();
   return;
+}
+
+char* get_mesg(char *mesg, int key)
+{
+  switch (key) {
+  case KEY_UP:
+    mesg = "up";
+    break;
+  case KEY_DOWN:
+    mesg = "down";
+    break;
+  case KEY_LEFT:
+    mesg = "left";
+    break;
+  case KEY_RIGHT:
+    mesg = "right";
+    break;
+  case 32:
+    mesg = "FIRE";
+    break;
+  case 27:
+    mesg = "stop";
+    break;
+  }
+
+  return mesg;
+}
+
+int get_sig(int key)
+{
+  switch (key) {
+  case KEY_UP:
+    return(UP);
+    break;
+  case KEY_DOWN:
+    return(DOWN);
+    break;
+  case KEY_LEFT:
+    return(LEFT);
+    break;
+  case KEY_RIGHT:
+    return(RIGHT);
+    break;
+  case 32:
+    return(FIRE);
+    break;
+  case 27:
+    return(STOP);
+    break;
+  }
+
+  return(0);
 }
 
 char can_move_rl(usb_dev_handle *launcher, char direction)
@@ -285,9 +340,12 @@ char can_move_rl(usb_dev_handle *launcher, char direction)
   usb_control_msg(launcher, 0x21, 0x9, 0x200, 0, msg, 8, 100);
   int ret = usb_interrupt_read(launcher, 0x81, rec_buf,  1, 250);
 
-  //if () {
-  //}
-
+  for (int mask = 32; mask > 0; mask >>= 1) {    
+    if ((((int)rec_buf[0]) &  mask) == direction) {
+      return(FALSE);
+    }
+  }
+  
   return(TRUE);
 }
 
@@ -317,18 +375,18 @@ void send_msg(usb_dev_handle *launcher, int sig)
   char msg[8];
 
   /*
-  unsigned char rec_buf[1];
-  memset(rec_buf, 0x0, 1);
-  memset(msg, 0x0, 8);
-  msg[0] = 0x40;
-  usb_control_msg(launcher, 0x21, 0x9, 0x200, 0, msg, 8, 5);
+    unsigned char rec_buf[1];
+    memset(rec_buf, 0x0, 1);
+    memset(msg, 0x0, 8);
+    msg[0] = 0x40;
+    usb_control_msg(launcher, 0x21, 0x9, 0x200, 0, msg, 8, 5);
 
-  int ret = usb_interrupt_read(launcher, 0x81, rec_buf,  1, 5);
-  if (ret == 1) {
+    int ret = usb_interrupt_read(launcher, 0x81, rec_buf,  1, 5);
+    if (ret == 1) {
     if (rec_buf > 0) {
-      return;
+    return;
     }
-  }
+    }
   */
 
   memset(msg, 0, 8);
