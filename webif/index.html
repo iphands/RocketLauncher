@@ -1,0 +1,60 @@
+<html>
+  <head>
+    <title>RocketLauncher -- webif</title>
+
+    <script type="text/javascript">
+      function getMessageResponse(direction, time)
+      {
+      var xmlHttp = new XMLHttpRequest();
+      
+      xmlHttp.onreadystatechange = function()
+      {
+      if (xmlHttp.readyState == 4)
+      {
+      document.getElementById('response').innerHTML = xmlHttp.responseText;
+      document.myform.message.value = '';
+      }
+      }
+      
+      var url = "control.php";
+      url = url + "?direction=" + direction;
+      url = url +" &time=" + time;
+      xmlHttp.open("GET", url, true);
+      xmlHttp.send(null);
+      }
+    </script>
+
+  </head>
+  <body>
+    <div align="center">
+      <APPLET CODE = "WebCamApplet.class" archive="applet.jar" WIDTH = "640" HEIGHT = "480">
+	<param name=URL value="http://core2.lan:8888">
+	<param name=FPS value="60">
+	<param name=width value="640">
+	<param name=height value="480">
+      </APPLET>
+    </div>
+
+    <div>
+      <center>
+	<table border="0">
+	  <tr>
+	    <td></td>
+	    <td><input onclick='getMessageResponse("up", 500);' id="up" type="button" value="up"/></td>
+	    <td></td>
+	  </tr>
+	  <tr>
+	    <td><input onclick='getMessageResponse("left", 500);' id="left" type="button" value="left"/></td>
+	    <td><input onclick='getMessageResponse("fire", 3800);' id="fire" type="button" value="FIRE"/></td>
+	    <td><input onclick='getMessageResponse("right", 500);' id="right" type="button" value="right"/></td>
+	  </tr>
+	  <tr>
+	    <td></td>
+	    <td><input onclick='getMessageResponse("down", 500);' id="down" type="button" value="down"/></td>
+	    <td></td>
+	  </tr>
+	</table>
+      </center>
+    </div>    
+  </body>
+</html>
