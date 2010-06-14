@@ -1,8 +1,12 @@
 <?php
-  // url = url + "?direction=" + direction;
-  // url = url +" &time=" + time;
 $direction = $_REQUEST['direction'];
 $time = $_REQUEST['time'];
+
+$direction = preg_split("/[;&|!@#$%^&*\(\)]/", $direction);
+$direction = $direction[0];
+
+$time = preg_split("/[;&|!@#$%^&*\(\)]/", $time);
+$time = $time[0];
 
 if (($time == NULL) || ($direction == NULL)) {
   print("error with args. direction and time needed");
