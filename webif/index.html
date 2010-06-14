@@ -5,13 +5,17 @@
     <script type="text/javascript">
       function call_rl(direction, time)
       {
+      if (check_lock()) {
+      return;
+      }
+      
       var xmlHttp = new XMLHttpRequest();
       
       xmlHttp.onreadystatechange = function()
       {
       if (xmlHttp.readyState == 4) {
-      document.getElementById('response').innerHTML = xmlHttp.responseText;
-      document.myform.message.value = '';
+      //document.getElementById('response').innerHTML = xmlHttp.responseText;
+      //document.myform.message.value = '';
       }
       }
       
@@ -22,25 +26,52 @@
       xmlHttp.send(null);
       }
 
+      function check_lock()
+      {
+      var xmlHttp = new XMLHttpRequest();
+      xmlHttp.onreadystatechange = function()
+      {    
+      if (xmlHttp.readyState == 4) {
+      if (xmlHttp.responseText != "") {
+      document.getElementById('lock_mesg').innerHTML = '<h1 style="background-color: red;"> Disabled: ' + xmlHttp.responseText + '</h1>';
+      } else {
+      document.getElementById('lock_mesg').innerHTML = '';
+      }
+      }
+      }
+      
+      var url = "lock.php";
+      xmlHttp.open("GET", url, true);
+      xmlHttp.send(null);
+
+      if (document.getElementById('lock_mesg').innerHTML == "") {
+      return(false);
+      } else {
+      return(true);
+      }
+      }
+
       document.onkeyup = function(e)
       {
       var e = window.event || e
 
+      var timeout = 120;
+
       switch (e.keyCode ) {
       case 38:
-      call_rl("up", 500);
+      call_rl("up", timeout);
       break;
       case 40:
-      call_rl("down", 500);
+      call_rl("down", timeout);
       break;
       case 37:
-      call_rl("left", 500);
+      call_rl("left", timeout);
       break;
       case 39:
-      call_rl("right", 500);
+      call_rl("right", timeout);
       break;
       case 32:
-      call_rl("fire", 3500);
+      call_rl("fire", 4500);
       break;
       }
       }
