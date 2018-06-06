@@ -42,12 +42,12 @@ int main(int argc, char ** argv)
   }
 
   struct usb_dev_handle *launcher = get_rocker_launcher_dev_handle();
-  
+
   if (launcher == NULL) {
     printf("!! Unable to find rocket launcher device!\nExiting...\n");
     return(1);
   }
-  
+
   printf("-- Opened device\n");
   printf("-- Detaching driver from device\n");
   usb_detach_kernel_driver_np(launcher, 0);
@@ -56,7 +56,7 @@ int main(int argc, char ** argv)
     printf("!! Unable to claim rocket launcher device!\nExiting...\n");
     return(1);
   }
-  
+
   if (argc > 1) {
     char direction = argv[1][0];
     int timeout = (atoi(argv[2]) * 1000);
@@ -75,7 +75,7 @@ int main(int argc, char ** argv)
 
 void do_cli(usb_dev_handle *launcher, char direction, int timeout)
 {
-  
+
   char dir_char = 0;
 
   switch (direction) {
@@ -123,13 +123,13 @@ void do_cli(usb_dev_handle *launcher, char direction, int timeout)
   case 'f':
     send_msg(launcher, FIRE);
     int ret = loop_until_ret(launcher, 5000, FIRE);
-    
+
     if (ret) {
       printf("Done firing!\n");
     } else {
       printf("!! Hit firing timeout!\n");
     }
-    
+
     disarm_rl(launcher);
     stop_rl(launcher);
     return;
@@ -141,11 +141,11 @@ void do_cli(usb_dev_handle *launcher, char direction, int timeout)
     return;
     break;
   }
-  
+
   usleep(timeout);
   disarm_rl(launcher);
   stop_rl(launcher);
-  return;  
+  return;
 }
 
 char do_arg_check(int argc, char ** argv)
@@ -171,7 +171,7 @@ char do_arg_check(int argc, char ** argv)
     return(1);
     break;
   }
-  
+
   int time = atoi(argv[2]);
   if ((time > 10000) || (time < 0)) {
     return(1);
@@ -196,7 +196,7 @@ void do_tui(usb_dev_handle *launcher)
   WINDOW *info_win = newwin(15, COLS - 8, 0, 8);
   box(info_win, '|', '-');
   mvwprintw(info_win, 0, 1, "info");
-  mvwprintw(info_win, 1, 1, "Controls:");
+  mvwprintw(info_win, 1, 1, " Controls:");
   mvwprintw(info_win, 2, 1, "\tup arrow");
   mvwprintw(info_win, 3, 1, "\tdown arrow");
   mvwprintw(info_win, 4, 1, "\tleft arrow");
@@ -204,9 +204,9 @@ void do_tui(usb_dev_handle *launcher)
   mvwprintw(info_win, 6, 1, "\tspace bar (fire)");
   mvwprintw(info_win, 7, 1, "\tescape (stop)");
   mvwprintw(info_win, 8, 1, "\tctrl+c (quit)");
-  mvwprintw(info_win, 10, 1, "Written by Ian Page Hands");
-  mvwprintw(info_win, 12, 1, "Thanks to Dan Krasinski for figuring out the usb command codes,");
-  mvwprintw(info_win, 13, 1, "and writing some example code.");
+  mvwprintw(info_win, 10, 1, " Written by Ian Page Hands (iphands@gmail.com ihands@redhat.com)");
+  mvwprintw(info_win, 12, 1, " Thanks to Dan Krasinski for figuring out the usb command codes,");
+  mvwprintw(info_win, 13, 1, " and writing some example code.");
   wrefresh(info_win);
 
   WINDOW *debug_win = newwin(LINES - 15, COLS, 15, 8);
@@ -219,7 +219,7 @@ void do_tui(usb_dev_handle *launcher)
   int key = 0;
   int log_line_pos = 1;
   int debug_line_pos = 1;
-  char *mesg = "-----";  
+  char *mesg = "-----";
 
   while (key != 3) {
     key = getch();
@@ -236,8 +236,8 @@ void do_tui(usb_dev_handle *launcher)
       box(debug_win, '|', '-');
       mvwprintw(debug_win, 0, 1, "device-debug");
     }
-    
-    if (can_move_rl(launcher, get_sig(key)) == FALSE) {      
+
+    if (can_move_rl(launcher, get_sig(key)) == FALSE) {
       mvwprintw(debug_win, debug_line_pos++, 1, "Unable to move %s! Already at the max. (%d)", mesg, get_sig(key));
 
       wrefresh(debug_win);
@@ -266,13 +266,13 @@ void do_tui(usb_dev_handle *launcher)
       mvwprintw(info_win, 6, 1, "*");
       send_msg(launcher, FIRE);
       int ret = loop_until_ret(launcher, 5000, FIRE);
-            
+
       if (ret) {
 	mvwprintw(debug_win, debug_line_pos++, 1, "Done firing!");
       } else {
 	mvwprintw(debug_win, debug_line_pos++, 1, "!! Hit firing timeout!");
       }
-      
+
       wrefresh(debug_win);
       disarm_rl(launcher);
       stop_rl(launcher);
@@ -353,7 +353,7 @@ int get_sig(int key)
   return(0);
 }
 
-int loop_until_ret(usb_dev_handle *launcher, unsigned int timeout, unsigned int sig) 
+int loop_until_ret(usb_dev_handle *launcher, unsigned int timeout, unsigned int sig)
 {
   char rec_buf[1];
   char msg[8];
@@ -370,7 +370,7 @@ int loop_until_ret(usb_dev_handle *launcher, unsigned int timeout, unsigned int 
     }
     usleep(1000 * 100);
   }
-  
+
   for (unsigned int i = 0; i < timeout; i += 100) {
     ret = can_move_rl(launcher, sig);
     send_msg(launcher, sig);
@@ -379,7 +379,7 @@ int loop_until_ret(usb_dev_handle *launcher, unsigned int timeout, unsigned int 
     }
     usleep(1000 * 100);
   }
-  
+
   return(FALSE);
 }
 
@@ -389,16 +389,16 @@ char can_move_rl(usb_dev_handle *launcher, char direction)
   char msg[8];
   memset(msg, 0x0, 8);
   msg[0] = 0x40;
-  
+
   usb_control_msg(launcher, 0x21, 0x9, 0x200, 0, msg, 8, 100);
   usb_interrupt_read(launcher, 0x81, rec_buf,  1, 250);
 
-  for (int mask = 32; mask > 0; mask >>= 1) {    
+  for (int mask = 32; mask > 0; mask >>= 1) {
     if ((((int)rec_buf[0]) &  mask) == direction) {
       return(FALSE);
     }
   }
-  
+
   return(TRUE);
 }
 
@@ -454,7 +454,7 @@ struct usb_dev_handle* get_rocker_launcher_dev_handle()
   usb_init();
   usb_find_busses();
   usb_find_devices();
-  
+
   struct usb_bus *busses = usb_get_busses();
   struct usb_bus *bus;
 
@@ -462,7 +462,7 @@ struct usb_dev_handle* get_rocker_launcher_dev_handle()
     struct usb_device *dev;
     for (dev = bus->devices; dev; dev = dev->next) {
 
-      if ((dev->descriptor.idVendor == 2689) || (dev->descriptor.idVendor == 6465)) {
+      if ((dev->descriptor.idVendor == 0x0a81 && dev->descriptor.idProduct == 0x0701)) {
 	printf("-- Found device with vendor id %d\n", dev->descriptor.idVendor);
 	return usb_open(dev);
       }
