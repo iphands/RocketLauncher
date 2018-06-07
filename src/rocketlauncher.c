@@ -188,7 +188,7 @@ void do_tui(usb_dev_handle *launcher)
   noecho();
 
   refresh();
-  WINDOW *log_win = newwin(LINES, 7, 0, 0);
+  WINDOW *log_win = newwin(LINES, 8, 0, 0);
   box(log_win, '|', '-');
   mvwprintw(log_win, 0, 1, "log");
   wrefresh(log_win);
@@ -227,7 +227,7 @@ void do_tui(usb_dev_handle *launcher)
     mesg = get_mesg(mesg, key);
 
     for (int i = 2; i < 8; i++) {
-      mvwprintw(info_win, i, 1, " ");
+      mvwprintw(info_win, i, 6, " ");
     }
 
     if (debug_line_pos >= (LINES - 15 - 1)) {
@@ -238,7 +238,7 @@ void do_tui(usb_dev_handle *launcher)
     }
 
     if (can_move_rl(launcher, get_sig(key)) == FALSE) {
-      mvwprintw(debug_win, debug_line_pos++, 1, "Unable to move %s! Already at the max. (%d)", mesg, get_sig(key));
+      mvwprintw(debug_win, debug_line_pos++, 2, "Unable to move %s! Already at the max. (%d)", mesg, get_sig(key));
 
       wrefresh(debug_win);
       curs_set(0);
@@ -247,23 +247,23 @@ void do_tui(usb_dev_handle *launcher)
 
     switch (key) {
     case KEY_UP:
-      mvwprintw(info_win, 2, 1, "*");
+      mvwprintw(info_win, 2, 6, "*");
       move_rl(launcher, UP);
       break;
     case KEY_DOWN:
-      mvwprintw(info_win, 3, 1, "*");
+      mvwprintw(info_win, 3, 6, "*");
       move_rl(launcher, DOWN);
       break;
     case KEY_LEFT:
-      mvwprintw(info_win, 4, 1, "*");
+      mvwprintw(info_win, 4, 6, "*");
       move_rl(launcher, LEFT);
       break;
     case KEY_RIGHT:
-      mvwprintw(info_win, 5, 1, "*");
+      mvwprintw(info_win, 5, 6, "*");
       move_rl(launcher, RIGHT);
       break;
     case 32:
-      mvwprintw(info_win, 6, 1, "*");
+      mvwprintw(info_win, 6, 6, "*");
       send_msg(launcher, FIRE);
       int ret = loop_until_ret(launcher, 5000, FIRE);
 
@@ -278,7 +278,7 @@ void do_tui(usb_dev_handle *launcher)
       stop_rl(launcher);
       break;
     case 27:
-      mvwprintw(info_win, 7, 1, "*");
+      mvwprintw(info_win, 7, 6, "*");
       disarm_rl(launcher);
       stop_rl(launcher);
       break;
@@ -291,7 +291,7 @@ void do_tui(usb_dev_handle *launcher)
       mvwprintw(log_win, 0, 1, "log");
     }
 
-    mvwprintw(log_win, log_line_pos++, 1, mesg);
+    mvwprintw(log_win, log_line_pos++, 2, mesg);
     curs_set(0);
     wrefresh(log_win);
     wrefresh(info_win);
