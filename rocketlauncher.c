@@ -209,7 +209,7 @@ void do_tui(usb_dev_handle *launcher)
   mvwprintw(info_win, 13, 1, " and writing some example code.");
   wrefresh(info_win);
 
-  WINDOW *debug_win = newwin(LINES - 15, COLS, 15, 8);
+  WINDOW *debug_win = newwin(LINES - 15, COLS - 8, 15, 8);
   box(debug_win, '|', '-');
   mvwprintw(debug_win, 0, 1, "device-debug");
   wrefresh(debug_win);
