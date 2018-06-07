@@ -1,5 +1,8 @@
-rocketlauncher: rocketLauncher.c
-	gcc -Wall -lusb -lncurses -o rocketlauncher rocketLauncher.c
+.DEFAULT_GOAL := rocketlauncher
+.PHONY: install uninstall clean
+
+rocketlauncher: rocketlauncher.c
+	gcc -Wall -lusb -lncurses -o rocketlauncher rocketlauncher.c
 
 install: rocketlauncher
 	cp rocketlauncher /usr/local/bin/rocketlauncher
