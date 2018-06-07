@@ -6,8 +6,8 @@ build:
 
 rocketlauncher: ./build/rocketlauncher
 
-./build/rocketlauncher: rocketlauncher.c build
-	gcc -Wall -lusb -lncurses -o ./build/rocketlauncher rocketlauncher.c
+./build/rocketlauncher: ./src/rocketlauncher.c build
+	gcc -Wall -lusb -lncurses -o ./build/rocketlauncher ./src/rocketlauncher.c
 
 install: rocketlauncher
 	cp ./build/rocketlauncher /usr/local/bin/rocketlauncher
