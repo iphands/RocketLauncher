@@ -418,7 +418,7 @@ void stop_rl(usb_dev_handle *launcher)
 void move_rl(usb_dev_handle *launcher, int sig)
 {
   send_msg(launcher, sig);
-  usleep(32 * 1000);
+  usleep(48 * 1000);
   stop_rl(launcher);
   return;
 }
